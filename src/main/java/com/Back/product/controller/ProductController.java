@@ -1,6 +1,7 @@
 package com.Back.product.controller;
 
 import com.Back.product.entity.Product;
+import com.Back.product.service.ProductChatService;
 import com.Back.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductChatService productChatService;
 
     // ==================== CREATE ====================
     @PostMapping
@@ -73,6 +75,13 @@ public class ProductController {
         }
     }
 
+    // ==================== CHAT ====================
+    @PostMapping("/chat")
+    public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
+        var response = productChatService.chat(request.message());
+        return ResponseEntity.ok(new ChatResponse(response.message()));
+    }
+
     // ==================== Request DTOs ====================
     public record CreateRequest(String name, List<String> keywords) {}
     public record UpdateRequest(String name, List<String> keywords) {}
@@ -81,4 +90,6 @@ public class ProductController {
             if (k <= 0) k = 10;
         }
     }
+    public record ChatRequest(String message) {}
+    public record ChatResponse(String message) {}
 }
