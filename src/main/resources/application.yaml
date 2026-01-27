@@ -24,3 +24,12 @@ spring:
         options:
           dimensions: 384
           model: text-embedding-3-small
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+    vectorstore:
+      chroma:
+        collection-name: chat-memory
+        initialize-schema: true

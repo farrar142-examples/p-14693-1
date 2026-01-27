@@ -16,3 +16,12 @@ spring:
           model: nomic-embed-text
       chat:
         model: llama3.1
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+    vectorstore:
+      chroma:
+        collection-name: chat-memory-test
+        initialize-schema: true

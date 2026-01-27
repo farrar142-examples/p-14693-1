@@ -2,14 +2,25 @@ package com.Back.product.service;
 
 import com.Back.product.tool.ProductSearchTool;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.VectorStoreChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 @Service
 public class ProductChatService {
 
-    private final ChatClient chatClient;
-    private final ProductSearchTool productSearchTool;
+    @Autowired
+    private ChatClient chatClient;
+    @Autowired
+    private ProductSearchTool productSearchTool;
+    @Autowired
+    private ChatMemory chatMemory;
+    @Autowired
+    private VectorStore vectorStore;
 
     private static final String SYSTEM_PROMPT = """
         당신은 친절한 상품 추천 어시스턴트입니다.
@@ -24,19 +35,20 @@ public class ProductChatService {
         검색 결과를 바탕으로 항상 도움이 되는 추천을 제공하세요.
         상품을 찾지 못한 경우, 사용자에게 알리고 대안적인 검색어를 제안하세요.
         
+        이전 대화 내용을 기억하고 맥락에 맞는 응답을 제공하세요.
         친절하고 도움이 되는 방식으로 응답하세요.
         """;
 
-    public ProductChatService(ChatClient chatClient, ProductSearchTool productSearchTool) {
-        this.chatClient = chatClient;
-        this.productSearchTool = productSearchTool;
-    }
-
-    public ChatResponse chat(String userMessage) {
+    public ChatResponse chat(String userMessage, String userId) {
         String response = chatClient.prompt()
                 .system(SYSTEM_PROMPT)
                 .user(userMessage)
                 .tools(productSearchTool)
+                .advisors(
+                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
+                        VectorStoreChatMemoryAdvisor.builder(vectorStore).build()
+                )
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, userId))
                 .call()
                 .content();
 
@@ -45,12 +57,18 @@ public class ProductChatService {
 
     public record ChatResponse(String message) {}
 
-    public Flux<String> chatStream(String userMessage) {
+    public Flux<String> chatStream(String userMessage, String userId) {
         return chatClient.prompt()
                 .system(SYSTEM_PROMPT)
                 .user(userMessage)
                 .tools(productSearchTool)
+                .advisors(
+                        MessageChatMemoryAdvisor.builder(chatMemory).build(),
+                        VectorStoreChatMemoryAdvisor.builder(vectorStore).build()
+                )
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, userId))
                 .stream()
                 .content();
     }
 }
+

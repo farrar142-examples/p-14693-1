@@ -45,8 +45,14 @@ dependencies {
 	// spring ai
 	implementation("org.springframework.ai:spring-ai-starter-model-openai")
 	implementation("org.springframework.ai:spring-ai-starter-model-ollama")
+	// spring ai chat memory & vector store
+	implementation("org.springframework.ai:spring-ai-starter-vector-store-chroma")
+	implementation("org.springframework.ai:spring-ai-advisors-vector-store")
+	implementation("org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc")
 	// hibernate-vector for pgvector support
 	implementation("org.hibernate.orm:hibernate-vector")
+	// json (required for ChromaDB)
+	implementation("org.springframework.boot:spring-boot-starter-json")
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
@@ -55,6 +61,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 	testImplementation("org.testcontainers:testcontainers-postgresql")
+	testImplementation("org.testcontainers:testcontainers-chromadb")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

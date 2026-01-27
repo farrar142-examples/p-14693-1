@@ -3,6 +3,7 @@ package com.Back;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.testcontainers.chromadb.ChromaDBContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -16,4 +17,8 @@ public class TestcontainersConfiguration {
 				.withInitScript("init-pgvector.sql");
 	}
 
+	@Bean
+	ChromaDBContainer chromaContainer() {
+		return new ChromaDBContainer("chromadb/chroma:latest");
+	}
 }

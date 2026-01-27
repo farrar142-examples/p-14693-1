@@ -2,6 +2,7 @@ package com.Back;
 
 import com.Back.product.entity.Product;
 import com.Back.product.repository.ProductRepository;
+import com.Back.product.service.ProductChatService;
 import com.Back.product.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +26,9 @@ class BackApplicationTests {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductChatService productChatService;
 
     @BeforeEach
     void setUp() {
@@ -63,19 +67,15 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - Create 테스트")
     void t3() {
-        // given
         String name = "노트북";
         List<String> keywords = List.of("전자기기", "컴퓨터", "휴대용");
 
-        // when
         Product product = productService.create(name, keywords);
 
-        // then
         assertNotNull(product.getId());
         assertEquals(name, product.getName());
         assertEquals(3, product.getKeywords().size());
 
-        // embedding이 저장되었는지 확인
         Optional<Product> found = productService.findById(product.getId());
         assertTrue(found.isPresent());
         assertNotNull(found.get().getEmbedding());
@@ -84,14 +84,11 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - Read 테스트")
     void t4() {
-        // given
         Product created = productService.create("스마트폰", List.of("전자기기", "통신"));
 
-        // when
         Optional<Product> found = productService.findById(created.getId());
         List<Product> all = productService.findAll();
 
-        // then
         assertTrue(found.isPresent());
         assertEquals("스마트폰", found.get().getName());
         assertFalse(all.isEmpty());
@@ -100,17 +97,13 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - Update 테스트")
     void t5() {
-        // given
         Product created = productService.create("태블릿", List.of("전자기기"));
 
-        // when
         Product updated = productService.update(created.getId(), "아이패드", List.of("애플", "태블릿", "전자기기"));
 
-        // then
         assertEquals("아이패드", updated.getName());
         assertEquals(3, updated.getKeywords().size());
 
-        // embedding도 업데이트 확인
         Optional<Product> found = productService.findById(updated.getId());
         assertTrue(found.isPresent());
         assertNotNull(found.get().getEmbedding());
@@ -119,14 +112,11 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - Delete 테스트")
     void t6() {
-        // given
         Product created = productService.create("삭제용상품", List.of("테스트"));
         Long id = created.getId();
 
-        // when
         productService.delete(id);
 
-        // then
         Optional<Product> found = productService.findById(id);
         assertFalse(found.isPresent());
     }
@@ -134,15 +124,12 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - KNN Search basic test with keywords")
     void t7() {
-        // given
         productService.create("Gaming Laptop", List.of("gaming", "high-performance", "graphics-card"));
         productService.create("Business Laptop", List.of("office", "document", "lightweight"));
         productService.create("Gaming Mouse", List.of("gaming", "high-sensitivity", "RGB"));
 
-        // when - search using keywords list (simulating user viewing a gaming product)
         List<Product> results = productService.knnSearch(List.of("gaming", "computer"), 3);
 
-        // then
         assertNotNull(results);
         assertFalse(results.isEmpty());
         System.out.println("KNN Search Results (keywords: gaming, computer):");
@@ -152,16 +139,13 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - KNN Search with product keywords")
     void t8() {
-        // given - products from different categories
         Product coffee = productService.create("Americano", List.of("coffee", "caffeine", "beverage"));
         Product tea = productService.create("Green Tea", List.of("tea", "catechin", "beverage"));
         Product juice = productService.create("Orange Juice", List.of("fruit", "vitamin", "beverage"));
 
-        // when - search using coffee product's keywords
         List<String> coffeeKeywords = List.of("coffee", "caffeine", "beverage");
         List<Product> results = productService.knnSearch(coffeeKeywords, 3);
 
-        // then - verify results are returned and coffee is in results
         assertFalse(results.isEmpty());
         List<Long> resultIds = results.stream().map(Product::getId).toList();
         assertTrue(resultIds.contains(coffee.getId()), "Americano should be in results");
@@ -175,16 +159,13 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - findSimilarProducts test")
     void t9() {
-        // given
         Product laptop = productService.create("MacBook Pro", List.of("laptop", "apple", "development"));
         Product phone = productService.create("iPhone 15", List.of("smartphone", "apple", "communication"));
         Product tablet = productService.create("iPad Pro", List.of("tablet", "apple", "drawing"));
         Product headphone = productService.create("AirPods Max", List.of("headphone", "apple", "music"));
 
-        // when - find similar products to MacBook Pro
         List<Product> results = productService.findSimilarProducts(laptop.getId(), 3);
 
-        // then - MacBook should not be in results (exclude itself), other apple products should be
         assertFalse(results.isEmpty());
         List<Long> resultIds = results.stream().map(Product::getId).toList();
         assertFalse(resultIds.contains(laptop.getId()), "MacBook should NOT be in results (self excluded)");
@@ -198,16 +179,13 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - KNN Search clothing category")
     void t10() {
-        // given
         Product jacket = productService.create("Winter Puffer Jacket", List.of("outerwear", "winter", "warm"));
         Product tshirt = productService.create("Cotton T-Shirt", List.of("top", "summer", "casual"));
         Product jeans = productService.create("Blue Jeans", List.of("bottom", "denim", "casual"));
         Product coat = productService.create("Wool Coat", List.of("outerwear", "winter", "formal"));
 
-        // when - search using winter clothing keywords
         List<Product> results = productService.knnSearch(List.of("outerwear", "winter", "warm"), 4);
 
-        // then - winter clothes should be in results
         assertFalse(results.isEmpty());
         List<Long> resultIds = results.stream().map(Product::getId).toList();
         List<Long> winterIds = List.of(jacket.getId(), coat.getId());
@@ -223,17 +201,14 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - KNN Search k limit verification")
     void t11() {
-        // given - create 5 products
         productService.create("Product 1", List.of("test", "first"));
         productService.create("Product 2", List.of("test", "second"));
         productService.create("Product 3", List.of("test", "third"));
         productService.create("Product 4", List.of("test", "fourth"));
         productService.create("Product 5", List.of("test", "fifth"));
 
-        // when - search with k=3
         List<Product> results = productService.knnSearch(List.of("test", "product"), 3);
 
-        // then - should return at most 3 results
         assertTrue(results.size() <= 3, "Should not return more than k results");
 
         System.out.println("k limit verification (k=3):");
@@ -243,13 +218,64 @@ class BackApplicationTests {
     @Test
     @DisplayName("ProductService - KNN Search empty keywords handling")
     void t12() {
-        // when - search with empty keywords
         List<Product> results = productService.knnSearch(List.of(), 3);
 
-        // then - should return empty list
         assertNotNull(results);
         assertTrue(results.isEmpty(), "Empty keywords should return empty list");
         System.out.println("Empty keywords handling: result count = " + results.size());
+    }
+
+    @Test
+    @DisplayName("ChatMemory - 단기 메모리 테스트 (동일 userId)")
+    void t13() {
+        productService.create("노트북", List.of("전자기기", "컴퓨터"));
+        String userId = "test-user-1";
+
+        var response1 = productChatService.chat("노트북 추천해줘", userId);
+        assertNotNull(response1);
+        assertNotNull(response1.message());
+        System.out.println("첫 번째 응답: " + response1.message());
+
+        var response2 = productChatService.chat("그 중에서 제일 추천할만한건?", userId);
+        assertNotNull(response2);
+        assertNotNull(response2.message());
+        System.out.println("두 번째 응답: " + response2.message());
+    }
+
+    @Test
+    @DisplayName("ChatMemory - 다른 userId는 별도 메모리 사용")
+    void t14() {
+        productService.create("스마트폰", List.of("전자기기", "모바일"));
+        productService.create("노트북", List.of("전자기기", "컴퓨터"));
+        String userId1 = "user-A";
+        String userId2 = "user-B";
+
+        var responseA1 = productChatService.chat("스마트폰 추천해줘", userId1);
+        assertNotNull(responseA1);
+        System.out.println("User A 첫 번째 응답: " + responseA1.message());
+
+        var responseB1 = productChatService.chat("노트북 추천해줘", userId2);
+        assertNotNull(responseB1);
+        System.out.println("User B 첫 번째 응답: " + responseB1.message());
+
+        var responseA2 = productChatService.chat("방금 추천해준 것 중에서 가장 좋은건?", userId1);
+        assertNotNull(responseA2);
+        System.out.println("User A 두 번째 응답: " + responseA2.message());
+    }
+
+    @Test
+    @DisplayName("ChatMemory - 스트리밍 채팅 메모리 테스트")
+    void t15() {
+        productService.create("태블릿", List.of("전자기기", "터치스크린"));
+        String userId = "stream-user";
+
+        StringBuilder result = new StringBuilder();
+        productChatService.chatStream("태블릿 추천해줘", userId)
+                .doOnNext(result::append)
+                .blockLast();
+
+        assertFalse(result.toString().isEmpty());
+        System.out.println("스트리밍 응답: " + result);
     }
 
 }

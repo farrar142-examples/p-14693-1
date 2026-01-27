@@ -81,8 +81,10 @@ public class ProductController {
 
     // ==================== CHAT ====================
     @PostMapping("/chat")
-    public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
-        var response = productChatService.chat(request.message());
+    public ResponseEntity<ChatResponse> chat(
+            @RequestBody ChatRequest request,
+            @RequestParam(defaultValue = "0") String userId) {
+        var response = productChatService.chat(request.message(), userId);
         return ResponseEntity.ok(new ChatResponse(response.message()));
     }
 
@@ -98,13 +100,15 @@ public class ProductController {
     public record ChatResponse(String message) {}
 
     @GetMapping(value="/chat/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter chat(@RequestParam String message) {
+    public SseEmitter chatStream(
+            @RequestParam String message,
+            @RequestParam(defaultValue = "0") String userId) {
         SseEmitter emitter = new SseEmitter(0L);
 
-        // 2. ChatClient를 통해 스트림(Flux) 요청
-        Flux<String> response = productChatService.chatStream(message);
+        // ChatClient를 통해 스트림(Flux) 요청
+        Flux<String> response = productChatService.chatStream(message, userId);
 
-        // 3. 스트림 구독 및 전송
+        // 스트림 구독 및 전송
         response.subscribe(
                 r -> {
                     try {
