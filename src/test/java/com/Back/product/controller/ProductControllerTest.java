@@ -2,7 +2,6 @@ package com.Back.product.controller;
 
 import com.Back.TestcontainersConfiguration;
 import com.Back.product.entity.Product;
-import com.Back.product.repository.ProductDocumentRepository;
 import com.Back.product.repository.ProductRepository;
 import com.Back.product.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,12 +42,8 @@ class ProductControllerTest {
     @Autowired
     private ProductRepository productRepository;
 
-    @Autowired
-    private ProductDocumentRepository productDocumentRepository;
-
     @BeforeEach
     void setUp() {
-        productDocumentRepository.deleteAll();
         productRepository.deleteAll();
     }
 
