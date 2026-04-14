@@ -1,6 +1,6 @@
 plugins {
 	java
-	id("org.springframework.boot") version "4.1.0-M1"
+	id("org.springframework.boot") version "4.1.0-M4"
 	id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -22,15 +22,11 @@ configurations {
 
 repositories {
 	mavenCentral()
-	maven { url = uri("https://repo.spring.io/milestone") }
 	maven { url = uri("https://repo.spring.io/snapshot") }
-	maven {
-		name = "Central Portal Snapshots"
-		url = uri("https://repo.spring.io/snapshots/central-portal")
-	}
 }
 
-extra["springAiVersion"] = "2.0.0-SNAPSHOT"
+
+extra["springAiVersion"] = "2.0.0-M4"
 
 dependencyManagement {
 	imports {
